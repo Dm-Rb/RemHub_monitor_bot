@@ -98,18 +98,22 @@ class MonitoringRemzona:
         if status_code:
             rt = str(round(response_time, 2)) + ' (сек.)'
             if status_code == 200:
-                sc = f'{status_code}  ({emoji.emojize(":check_mark_button:", language="en")}Всё ОК)'
+                sc = f'{status_code}  ({emoji.emojize(":check_mark:", language="en")}Всё ОК)'
             else:
                 sc = f'{status_code}  ({emoji.emojize(":exclamation:", language="alias")}Что-то пошло не так, <a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Status">расшифровка кодов ответа сервера</a>)'
         elif status_code == None:
             rt = 'Не удалось связаться с сервером!'
             sc = 'Не удалось связаться с сервером!'
+        if self.get_average_response_time() == 1:
+            art = 'менее 1'
+        else:
+            art = str(round(self.get_average_response_time(), 2))
 
         body_message = f"""
 {datetime}
 <b>Сайт:</b>   {self.URL}
-<b>Время текущего отклика:</b>   {rt}
-<b>Среднее время отклика за 5 минут:</b>   {round(self.get_average_response_time(), 2)} (сек)
+<b>Время текущего отклика:</b>   {rt} (сек)
+<b>Среднее время отклика за 5 минут:</b>   {art} (сек)
 <b>Код ответа сервера:</b>   {sc}
     """
         if status_code == None:
