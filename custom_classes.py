@@ -96,7 +96,7 @@ class MonitoringRemzona:
 
     def get_text_notification(self, status_code, datetime, response_time):
         if status_code:
-            rt = str(round(response_time, 2)) + ' (сек.)'
+            rt = str(round(response_time, 2))
             if status_code == 200:
                 sc = f'{status_code}  ({emoji.emojize(":check_mark:", language="en")}Всё ОК)'
             else:
@@ -104,43 +104,42 @@ class MonitoringRemzona:
         elif status_code == None:
             rt = 'Не удалось связаться с сервером!'
             sc = 'Не удалось связаться с сервером!'
-        if self.get_average_response_time() == 1:
-            art = 'менее 1'
-        else:
-            art = str(round(self.get_average_response_time(), 2))
+
 
         body_message = f"""
 {datetime}
 <b>Сайт:</b>   {self.URL}
 <b>Время текущего отклика:</b>   {rt} (сек)
-<b>Среднее время отклика за 5 минут:</b>   {art} (сек)
+<b>Среднее время отклика за 5 минут:</b>   {round(self.get_average_response_time(), 2)} (сек)
 <b>Код ответа сервера:</b>   {sc}
     """
         if status_code == None:
             header_message = f"{emoji.emojize(':skull_and_crossbones:', language='en')} <b>Сайт не доступен! Всё очень плохо...</b>"
             return str(header_message + '\n' + body_message)
 
-        elif status_code != 200 and response_time >= self.get_average_response_time():
-            header_message = f"{emoji.emojize(':exclamation:', language='alias')} <b>Обнаружены проблемы в работе сайта,</b> см. код ответа сервера" + '\n' + f"{emoji.emojize(':clock7:', language='alias')} <b>Сайт слишком долго отвечает на запрос</b>"
+        elif status_code != 200 and self.get_average_response_time() >= 1:
+            header_message = f"{emoji.emojize(':exclamation:', language='alias')} <b>Обнаружены проблемы в работе сайта,</b> см. код ответа сервера" + '\n' + f"{emoji.emojize(':clock7:', language='alias')} <b>Превышено среднее время отклика сайта</b>"
             return str(header_message + '\n' + body_message)
         elif status_code != 200:
             header_message = f"{emoji.emojize(':exclamation:', language='alias')} <b>Обнаружены проблемы в работе сайта,</b> см. код ответа сервера"
             return str(header_message + '\n' + body_message)
-        elif response_time >= self.get_average_response_time():
-            header_message = f"{emoji.emojize(':clock7:', language='alias')} <b>Сайт слишком долго отвечает на запрос</b>"
+        elif self.get_average_response_time() >= 1:
+            header_message = f"{emoji.emojize(':clock7:', language='alias')} <b>Превышено среднее время отклика сайта</b>"
             return str(header_message + '\n' + body_message)
 
 
     def get_average_response_time(self):
-        if len(self.average_response_time) > 4:
+        if len(self.average_response_time) > 5:
             self.average_response_time.pop(0)
             art = sum(self.average_response_time) / len(self.average_response_time)
-            if art > 1:
-                return art
-            else:
-                return 1
+            return art
+
+        elif len(self.average_response_time) == 1:
+            return self.average_response_time[0]
+
         else:
-            return 1
+            art = sum(self.average_response_time) / len(self.average_response_time)
+            return art
 
     def make_request(self):
         dt = datetime.now()
@@ -156,7 +155,7 @@ class MonitoringRemzona:
 
         if not self.server_fall:
             try:
-                if r.status_code != 200 or r.elapsed.total_seconds() >= self.get_average_response_time():
+                if r.status_code != 200 or self.get_average_response_time() >= 1:
                     self.server_fall = True
                     message = self.get_text_notification(status_code=r.status_code, datetime=dt,
                                                          response_time=response_time)
@@ -172,7 +171,7 @@ class MonitoringRemzona:
         elif self.server_fall:
             self.counter += 1
             try:
-                if r.status_code != 200 or r.elapsed.total_seconds() >= self.get_average_response_time():
+                if r.status_code != 200 or self.get_average_response_time() >= 1:
                     message = self.get_text_notification(status_code=r.status_code, datetime=dt,
                                                          response_time=response_time)
                     self.pool.append(message)
