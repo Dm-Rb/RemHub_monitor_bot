@@ -14,6 +14,7 @@ from custom_classes import MonitoringRemzona
 config: Config = load_config()
 BOT_TOKEN: str = config.tg_bot.token
 SERVER: str = config.tg_bot.token
+MONITOR_URL: str = config.site_monitor.monitor_url
 
 storage = MemoryStorage()
 data_base = Database('db_sqlite')
@@ -96,11 +97,15 @@ async def send_notification_to_users():
     if message:
         users = data_base.get_users_remzona_chek_on()
         for user in users:
-            await bot.send_message(chat_id=user, text=message, disable_web_page_preview=True)
+            if type(message) != str:
+                await bot.send_media_group(chat_id=user, media=message)
+
+            else:
+                await bot.send_message(chat_id=user, text=message, disable_web_page_preview=True)
 
 
 async def scheduler():
-    aioschedule.every(60).seconds.do(send_notification_to_users)
+    aioschedule.every(20).seconds.do(send_notification_to_users)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
