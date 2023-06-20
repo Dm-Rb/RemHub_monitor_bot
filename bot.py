@@ -10,6 +10,7 @@ from messages import messages as mes
 from config import Config, load_config
 from custom_classes import MonitoringRemzona
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import emoji
 
 
 config: Config = load_config()
@@ -141,7 +142,7 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
 
     if users:
         for user in users:
-            await bot.send_message(chat_id=user, text=f'{assignee_display_name} занялся устранением неполадок...')
+            await bot.send_message(chat_id=user, text=f'{emoji.emojize(":hammer_and_wrench:", language="en")} {assignee_display_name} занялся устранением неполадок')
             await bot.delete_message(chat_id=user, message_id=id_messages_callback.pop(user))
 
 
