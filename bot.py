@@ -9,9 +9,7 @@ import aioschedule
 from messages import messages as mes
 from config import Config, load_config
 from custom_classes import MonitoringRemzona
-from aiogram.types import ReplyKeyboardRemove, \
-    ReplyKeyboardMarkup, KeyboardButton, \
-    InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 config: Config = load_config()
@@ -24,10 +22,11 @@ data_base = Database('db_sqlite')
 bot = Bot(token=BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=storage)
 monitoring = MonitoringRemzona()
-id_messages_callback = {} # глобальная переменная key = user_id: val = id_messages
+id_messages_callback = {}  # глобальная переменная key = user_id: val = id_messages
 
 inline_btn_1 = InlineKeyboardButton('Я решу эту проблему', callback_data='button1')
 inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1)
+
 
 @dp.message_handler(commands="start")
 async def process_start_command(message: types.Message):
@@ -89,10 +88,6 @@ async def process_check_remzona_command(message: types.Message):
         await message.answer(text='Пройдите авторизацию /auth')
 
 
-
-
-
-
 @dp.callback_query_handler(text="check_remzona_notific")
 async def process_check_remzona_answer(call: types.CallbackQuery):
     data_base.monitoring_remzona_on_off(call.from_user.id)
@@ -134,14 +129,12 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
     monitoring.assignee_message = True
     global id_messages_callback
 
-
     await bot.answer_callback_query(
         callback_query.id,
         text='Все участники были оповещены о том, что вы занялись устранением неполадок', show_alert=True)
-    #await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
     await callback_query.message.delete()
 
-    #Уведомить всех участников бота о том, что юзер нажал инлайнбатон
+    #  Уведомить всех участников бота о том, что юзер нажал инлайнбатон
     users = data_base.get_users_remzona_chek_on()
     assignee_display_name = data_base.get_display_name(monitoring.assignee_id)
     users.remove(monitoring.assignee_id)
