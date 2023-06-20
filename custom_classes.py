@@ -1,6 +1,5 @@
 import sqlite3
 from aiogram.dispatcher.filters.state import StatesGroup, State
-from aiogram import types
 import requests
 from datetime import datetime
 import emoji
@@ -15,7 +14,6 @@ MONITOR_URL: str = config.site_monitor.monitor_url
 
 class UserState(StatesGroup):  # класс для состояний FSM
     jira_token = State()
-
 
 
 class Database:
@@ -37,8 +35,6 @@ class Database:
                 """)
             self.connection.commit()
 
-
-
     def check_user_id_exist(self, user_id):
         """ Проверить наличие user_id  в базе :return bool """
 
@@ -48,7 +44,6 @@ class Database:
 
     def add_new_row(self, user_id, jira_token):
         """ Добавить новую строку """
-
 
         with self.connection:
             return self.cursor.execute(
@@ -138,7 +133,7 @@ class MonitoringRemzona:
         elif status_code != 200:
             message_header['header_message'] = "Обнаружены проблемы в работе сайта"
             message_header['ico'] = path.join(folder_path, 'atention.png')
-        elif (self.get_average_response_time() > 1 and response_time > 1):
+        elif self.get_average_response_time() > 1 and response_time > 1:
             message_header['header_message'] = "Превышено среднее время отклика сайта"
             message_header['ico'] = path.join(folder_path, 'time.png')
 
@@ -209,7 +204,6 @@ class MonitoringRemzona:
             rt = 'Не удалось связаться с сервером!'
             sc = 'Не удалось связаться с сервером!'
 
-
         body_message = f"""<b>Дата и время события:</b>   {datetime}
 <b>Сайт:</b>   {self.URL}
 <b>Время текущего отклика:</b>   {rt} 
@@ -229,7 +223,6 @@ class MonitoringRemzona:
         elif self.get_average_response_time() > 1 and response_time > 1:
             header_message = f"{emoji.emojize(':clock7:', language='alias')} <b>Превышено среднее время отклика сайта</b>"
             return str(header_message + '\n' + body_message)
-
 
     def make_request(self):
 
