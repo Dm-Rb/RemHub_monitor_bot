@@ -17,6 +17,7 @@ class UserState(StatesGroup):  # класс для состояний FSM
     jira_token = State()
 
 
+
 class Database:
 
     def __init__(self, db_file):
@@ -89,6 +90,12 @@ class Database:
             result = [i[0] for i in users]
             return result
 
+    def get_display_name(self, user_id):
+        from support_functions import get_username_from_jira
+        with self.connection:
+            token = self.cursor.execute(f"SELECT jira_token FROM 'users_tokens_data' WHERE user_id={user_id}").fetchall()
+            display_name = get_username_from_jira(token[0][0])
+            return display_name[1]
 
 class MonitoringRemzona:
 
@@ -98,6 +105,8 @@ class MonitoringRemzona:
         self.counter = 0
         self.server_fall = False
         self.average_response_time = []
+        self.assignee_id = 0
+        self.assignee_message = False
 
     def get_average_response_time(self):
         if len(self.average_response_time) >= 5:
@@ -265,14 +274,18 @@ class MonitoringRemzona:
                 self.pool.clear()
                 counter_copy = str(self.counter)
                 self.counter = 0
-                media = types.MediaGroup()
-                text = f"<u>Из {counter_copy} последних запросов зафиксировано с проблемами</u> {len(pool_copy)}:"
-                for img in pool_copy:
-                    media.attach_photo(types.InputFile(img), caption=text)
-
-                return media
+                # media = types.MediaGroup()
+                # text = f"<u>Из {counter_copy} последних запросов зафиксировано с проблемами</u> {len(pool_copy)}:"
+                # for img in pool_copy:
+                #     media.attach_photo(types.InputFile(img), caption=text)
+                #
+                # return media
+                a = {'counter': counter_copy, 'pool': pool_copy}
+                return a
 
             elif (self.counter >= 5) and (not self.pool):
+                self.assignee_id = 0
+                self.assignee_message = False
                 self.server_fall = False
                 self.counter = 0
                 return f'Работа сайта восстановлена {emoji.emojize(":check_mark_button:", language="en")}'
