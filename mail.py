@@ -34,6 +34,6 @@ class CheckMail:
                     except:
                         message = part.get_payload()
 
-                text = f"<b>Уведомдение с почты {self.user_name}></b>\n{message}"
+                text = f"<b>Уведомдение с почты {self.user_name}</b>\n{message}"
                 messages.append(text)
             return messages
