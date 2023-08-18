@@ -11,7 +11,7 @@ from config import Config, load_config
 from custom_classes import MonitoringRemzona
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import emoji
-
+from mail import CheckMail
 
 config: Config = load_config()
 BOT_TOKEN: str = config.tg_bot.token
@@ -27,7 +27,7 @@ id_messages_callback = {}  # глобальная переменная key = use
 
 inline_btn_1 = InlineKeyboardButton('Я решу эту проблему', callback_data='button1')
 inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1)
-
+mail_notific = CheckMail(config)
 
 @dp.message_handler(commands="start")
 async def process_start_command(message: types.Message):
@@ -99,6 +99,7 @@ async def process_check_remzona_answer(call: types.CallbackQuery):
 @dp.message_handler()
 async def send_notification_to_users():
     message = monitoring.make_request()
+    mail_messages = mail_notific.check_mail_box()
 
     if message:
         users = data_base.get_users_remzona_chek_on()
@@ -122,7 +123,11 @@ async def send_notification_to_users():
 
             else:
                 await bot.send_message(chat_id=user, text=message, disable_web_page_preview=True)
-
+    if mail_messages:
+        users = data_base.get_users_remzona_chek_on()
+        for user in users:
+            for message in mail_messages:
+                await bot.send_message(chat_id=user, text=message)
 
 @dp.callback_query_handler(lambda c: c.data == 'button1')
 async def process_callback_button1(callback_query: types.CallbackQuery):
@@ -148,7 +153,7 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
 
 
 async def scheduler():
-    aioschedule.every(20).seconds.do(send_notification_to_users)
+    aioschedule.every(60).seconds.do(send_notification_to_users)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
@@ -156,6 +161,7 @@ async def scheduler():
 
 async def on_startup(dp):
     asyncio.create_task(scheduler())
+
 
 
 if __name__ == '__main__':
