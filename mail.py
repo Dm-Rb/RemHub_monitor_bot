@@ -27,12 +27,13 @@ class CheckMail:
                 res, msg = imap.uid('fetch', ms_num, '(RFC822)')  #Для метода uid
                 msg = email.message_from_bytes(msg[0][1])
                 for part in msg.walk():
-                    if part.get_content_maintype() == 'text' and part.get_content_subtype() == 'plain':
-                        message = part.get_payload()
-                    else:
+                    try:
                         message = part.get_payload(decode=True).decode()
                         message = message.replace('<div>', '')
                         message = message.replace('</div>', '')
-                    text = f"<b>Уведомдение с почты {self.user_name}></b>\n{message}"
-                    messages.append(text)
+                    except:
+                        message = part.get_payload()
+
+                text = f"<b>Уведомдение с почты {self.user_name}></b>\n{message}"
+                messages.append(text)
             return messages
